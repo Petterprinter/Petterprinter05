@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petterprinter05</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  :root {
+    --bg: #080c14; --bg2: #0c1220; --bg3: #101828; --bg4: #141f2e;
+    --blue: #1a3a5c; --blue2: #2d6a9f; --blue3: #0f2540;
+    --slate: #8899aa; --light: #dde6f0; --white: #f0f4f8;
+    --red: #e05252; --card: #0f1a28; --border: rgba(45,106,159,0.2);
+    --accent: #4a9eff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:auto;}
+  body{background:var(--bg);color:var(--white);font-family:'Inter',system-ui,sans-serif;line-height:1.6;overflow-x:hidden;}
+  h1,h2{font-family:'Playfair Display',Georgia,serif;}
+
+  /* ===================== TICKER ===================== */
+  .ticker-wrap{background:var(--bg3);border-bottom:1px solid var(--border);padding:0.4rem 0;overflow:hidden;white-space:nowrap;position:relative;z-index:101;}
+  .ticker{display:inline-block;animation:ticker 28s linear infinite;}
+  .ticker span{margin:0 2.5rem;font-size:0.78rem;letter-spacing:0.3px;}
+  .ticker .up{color:var(--accent);}
+  .ticker .dn{color:var(--red);}
+  .ticker .sym{color:var(--slate);margin-right:0.4rem;}
+  @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+  /* ===================== NAV ===================== */
+  nav{position:fixed;top:33px;width:100%;z-index:100;background:rgba(8,12,20,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;padding:0.9rem 2.5rem;transition:top 0.3s;}
+  nav.scrolled{top:0;}
+  .nav-logo{font-weight:800;font-size:1rem;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-family:'Playfair Display',serif;}
+  .nav-logo span{color:var(--white);font-weight:300;}
+  .nav-links{display:flex;gap:2rem;list-style:none;}
+  .nav-links a{color:var(--slate);text-decoration:none;font-size:0.82rem;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;transition:color 0.2s;}
+  .nav-links a:hover{color:var(--accent);}
+
+  /* ===================== SCROLL STACK ENGINE ===================== */
+  .scroll-container{position:relative;}
+  .scroll-panel{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;will-change:transform,opacity;}
+  #hero-panel{background:var(--bg);opacity:1 !important;transform:none !important;filter:none !important;}
+  .panel-inner{width:100%;max-width:1020px;margin:0 auto;padding:0 2rem;position:relative;z-index:2;}
+
+  /* ===================== HERO ===================== */
+  #hero-panel{background:var(--bg);}
+  .hero-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(45,106,159,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(45,106,159,0.05) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+  .hero-glow{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(45,106,159,0.09) 0%,transparent 70%);pointer-events:none;}
+  #candleCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0.5;}
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(45,106,159,0.12);border:1px solid rgba(45,106,159,0.35);color:var(--accent);padding:0.3rem 1rem;border-radius:2px;font-size:0.75rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2rem;}
+  .hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--blue2);border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  #hero-panel h1{font-size:clamp(2.8rem,7vw,5.2rem);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:1.5rem;}
+  #hero-panel h1 em{font-style:normal;color:var(--accent);position:relative;}
+  #hero-panel h1 em::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue3),var(--blue2),var(--blue3));}
+  .hero-sub{font-size:1.05rem;color:var(--slate);max-width:500px;margin:0 auto 3rem;line-height:1.7;}
+  .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:5rem;}
+  .btn-primary{display:inline-block;background:var(--blue2);color:var(--white);font-weight:700;padding:0.8rem 2rem;border-radius:2px;text-decoration:none;font-size:0.88rem;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.2s;}
+  .btn-primary:hover{background:var(--blue);transform:translateY(-2px);}
+  .btn-ghost{display:inline-block;border:1px solid rgba(45,106,159,0.4);color:var(--accent);font-weight:600;padding:0.8rem 2rem;border-radius:2px;text-decoration:none;font-size:0.88rem;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.2s;}
+  .btn-ghost:hover{background:rgba(45,106,159,0.1);}
+  .hero-stats{display:flex;gap:0;border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+  .hstat{padding:1.5rem 2.5rem;text-align:center;background:var(--bg3);border-right:1px solid var(--border);}
+  .hstat:last-child{border-right:none;}
+  .hstat .val{font-size:1.9rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-1px;}
+  .hstat .lbl{font-size:0.72rem;color:var(--slate);letter-spacing:1px;text-transform:uppercase;margin-top:0.3rem;}
+
+  /* ===================== PANEL COMMON ===================== */
+  .sec-label{font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.6rem;}
+  .sec-label::before{content:'';display:inline-block;width:20px;height:1px;background:var(--blue2);}
+  h2{font-size:clamp(1.8rem,3vw,2.5rem);font-weight:800;letter-spacing:-1px;margin-bottom:0.5rem;}
+  .rule{width:40px;height:2px;background:var(--blue2);margin:1.5rem 0 2.5rem;}
+
+  /* ===================== OM PANEL ===================== */
+  #om-panel{background:var(--bg2);}
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+  .about-body p{color:var(--slate);margin-bottom:1.1rem;font-size:1rem;}
+  .about-body p b{color:var(--white);}
+  .about-cards{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+  .acard{background:var(--bg3);padding:1.2rem 1.5rem;display:flex;gap:1rem;align-items:flex-start;transition:background 0.2s;}
+  .acard:hover{background:var(--bg4);}
+  .acard-icon{font-size:1.1rem;margin-top:0.15rem;min-width:24px;}
+  .acard-title{font-weight:600;font-size:0.9rem;margin-bottom:0.2rem;color:var(--white);}
+  .acard-desc{font-size:0.82rem;color:var(--slate);}
+
+  /* ===================== PORTFOLIO PANEL ===================== */
+  #portfolio-panel{background:var(--bg);}
+  .port-table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;}
+  .port-table thead tr{border-bottom:1px solid var(--border);}
+  .port-table th{font-size:0.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);font-weight:500;padding:0.75rem 1rem;text-align:left;}
+  .port-table th:last-child{text-align:right;}
+  .port-table tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;}
+  .port-table tbody tr:hover{background:rgba(45,106,159,0.06);}
+  .port-table td{padding:0.7rem 1rem;font-size:0.88rem;}
+  .port-ticker{font-weight:700;font-size:0.78rem;letter-spacing:0.5px;color:var(--accent);}
+  .port-name{color:var(--white);font-weight:500;}
+  .port-ret{text-align:right;font-weight:700;}
+  .up{color:var(--accent);}
+  .dn{color:var(--red);}
+  .port-section-head{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--slate);padding:1rem 1rem 0.4rem;font-weight:500;}
+  .port-disclaimer{font-size:0.76rem;color:var(--slate);font-style:italic;opacity:0.7;}
+  .port-table tbody tr[data-stock]{cursor:pointer;}
+  .port-table tbody tr[data-stock]:hover td{background:rgba(45,106,159,0.08);}
+  .port-table tbody tr[data-stock] td:first-child::after{content:' ↗';font-size:0.65rem;color:rgba(74,158,255,0.45);}
+  .port-scroll{overflow-y:auto;max-height:calc(100vh - 280px);}
+
+  /* ===================== CONTENT PANEL ===================== */
+  #content-panel{background:var(--bg2);}
+  .content-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+  .ccard{background:var(--bg3);padding:1.8rem;transition:background 0.2s;position:relative;overflow:hidden;}
+  .ccard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue3),transparent);opacity:0;transition:opacity 0.3s;}
+  .ccard:hover{background:var(--bg4);}
+  .ccard:hover::before{opacity:1;}
+  .ccard-emoji{font-size:1.5rem;margin-bottom:1rem;display:block;}
+  .ccard-tag{font-size:0.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:0.5rem;}
+  .ccard-title{font-size:0.95rem;font-weight:700;margin-bottom:0.5rem;color:var(--white);}
+  .ccard-desc{font-size:0.82rem;color:var(--slate);line-height:1.6;}
+  .tiktok-cta{text-align:center;margin-top:2.5rem;}
+  .tiktok-cta p{color:var(--slate);font-size:0.88rem;margin-bottom:1rem;}
+
+  /* ===================== REACH PANEL ===================== */
+  #reach-panel{background:var(--bg);}
+  .reach-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:2px;overflow:hidden;margin-bottom:3rem;}
+  .rcard{background:var(--bg3);padding:2rem 1.5rem;text-align:center;}
+  .rcard .rnum{font-size:2.2rem;font-weight:800;color:var(--accent);letter-spacing:-1px;}
+  .rcard .rlbl{font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--slate);margin-top:0.4rem;}
+  .partners-label{font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--slate);margin-bottom:1rem;}
+  .partner-list{display:flex;flex-wrap:wrap;gap:0.75rem;}
+  .pchip{border:1px solid var(--border);border-radius:2px;padding:0.5rem 1.1rem;font-size:0.82rem;font-weight:600;color:var(--light);background:var(--bg3);}
+
+  /* ===================== COLLAB PANEL ===================== */
+  #collab-panel{background:var(--bg2);}
+  .collab-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+  .collab-body p{color:var(--slate);margin-bottom:1rem;font-size:0.95rem;}
+  .collab-list{list-style:none;margin-bottom:1.5rem;}
+  .collab-list li{padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem;color:var(--slate);display:flex;gap:0.75rem;}
+  .collab-list li::before{content:'→';color:var(--accent);font-weight:700;flex-shrink:0;}
+  .collab-list li b{color:var(--white);}
+  .cform{background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:2.2rem;}
+  .fgroup{margin-bottom:1.2rem;}
+  .fgroup label{display:block;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:var(--slate);margin-bottom:0.5rem;}
+  .fgroup input,.fgroup textarea,.fgroup select{width:100%;background:var(--bg4);border:1px solid rgba(255,255,255,0.08);border-radius:2px;padding:0.75rem 1rem;color:var(--white);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s;}
+  .fgroup input:focus,.fgroup textarea:focus,.fgroup select:focus{border-color:var(--blue2);}
+  .fgroup textarea{height:100px;resize:vertical;}
+  .fgroup select option{background:var(--bg4);}
+  .btn-send{width:100%;background:var(--blue2);color:var(--white);font-weight:700;padding:0.9rem;border:none;border-radius:2px;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:background 0.2s;}
+  .btn-send:hover{background:var(--blue);}
+  .form-note{font-size:0.75rem;color:var(--slate);margin-top:0.75rem;text-align:center;}
+
+  /* ===================== FOOTER ===================== */
+  footer{background:var(--bg);border-top:1px solid var(--border);padding:3rem 2rem 2rem;text-align:center;}
+  .footer-logo{font-size:1rem;font-weight:800;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:0.4rem;font-family:'Playfair Display',serif;}
+  .footer-handle{color:var(--slate);font-size:0.82rem;margin-bottom:1.5rem;}
+  .footer-links{display:flex;justify-content:center;gap:2rem;margin-bottom:2rem;flex-wrap:wrap;}
+  .footer-links a{color:var(--slate);text-decoration:none;font-size:0.78rem;letter-spacing:0.5px;text-transform:uppercase;transition:color 0.2s;}
+  .footer-links a:hover{color:var(--accent);}
+  .footer-disc{font-size:0.74rem;color:rgba(136,153,170,0.6);max-width:560px;margin:0 auto 1rem;line-height:1.6;}
+  .footer-copy{font-size:0.72rem;color:rgba(136,153,170,0.35);}
+
+  /* ===================== MODAL ===================== */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(4,8,18,0.85);z-index:300;backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--bg3);border:1px solid rgba(45,106,159,0.3);border-radius:4px;width:min(680px,92vw);max-height:85vh;overflow-y:auto;position:relative;animation:modalIn 0.3s cubic-bezier(0.22,1,0.36,1);}
+  @keyframes modalIn{from{opacity:0;transform:translateY(24px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .modal-header{padding:1.8rem 2rem 1.2rem;border-bottom:1px solid rgba(45,106,159,0.15);display:flex;justify-content:space-between;align-items:flex-start;}
+  .modal-ticker{font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:0.3rem;}
+  .modal-name{font-size:1.4rem;font-weight:800;font-family:'Playfair Display',serif;letter-spacing:-0.5px;}
+  .modal-meta{font-size:0.8rem;color:var(--slate);margin-top:0.3rem;}
+  .modal-close{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--slate);width:32px;height:32px;border-radius:2px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
+  .modal-close:hover{background:rgba(255,255,255,0.12);color:var(--white);}
+  .modal-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(45,106,159,0.1);border-bottom:1px solid rgba(45,106,159,0.15);}
+  .kpi-cell{background:var(--bg3);padding:1rem 1.2rem;}
+  .kpi-label{font-size:0.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);margin-bottom:0.3rem;}
+  .kpi-val{font-size:1rem;font-weight:700;color:var(--white);}
+  .kpi-val.pos{color:var(--accent);}
+  .kpi-val.neg{color:var(--red);}
+  .modal-body{padding:1.5rem 2rem 2rem;}
+  .modal-tese{background:rgba(45,106,159,0.07);border-left:2px solid var(--blue2);padding:0.8rem 1.1rem;border-radius:0 2px 2px 0;font-size:0.88rem;color:var(--light);font-style:italic;margin-bottom:1.5rem;line-height:1.6;}
+  .modal-section{margin-bottom:1.4rem;}
+  .modal-section-title{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;}
+  .modal-section-title::after{content:'';flex:1;height:1px;background:rgba(45,106,159,0.2);}
+  .modal-list{list-style:none;display:flex;flex-direction:column;gap:0.5rem;}
+  .modal-list li{font-size:0.87rem;color:var(--slate);display:flex;gap:0.6rem;line-height:1.5;}
+  .modal-list.triggers li::before{content:'↑';color:var(--accent);font-weight:700;flex-shrink:0;}
+  .modal-list.challenges li::before{content:'↓';color:var(--red);font-weight:700;flex-shrink:0;}
+
+  /* ===================== EDIT BAR ===================== */
+  .edit-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(8,12,20,0.97);border-top:1px solid var(--border);padding:0.7rem 2rem;display:flex;align-items:center;gap:1rem;}
+  .edit-bar span{color:var(--slate);font-size:0.82rem;}
+  .edit-toggle{background:var(--blue2);color:var(--white);font-weight:700;border:none;padding:0.45rem 1.2rem;border-radius:2px;cursor:pointer;font-size:0.8rem;letter-spacing:0.5px;text-transform:uppercase;font-family:inherit;}
+  .edit-toggle.active{background:var(--red);}
+  .save-btn{background:transparent;color:var(--accent);border:1px solid rgba(45,106,159,0.4);font-weight:600;padding:0.45rem 1.1rem;border-radius:2px;cursor:pointer;font-size:0.8rem;font-family:inherit;}
+  .edit-hint{margin-left:auto;color:var(--slate);font-size:0.78rem;}
+  [contenteditable="true"]{outline:1px dashed rgba(45,106,159,0.5);border-radius:1px;cursor:text;}
+  [contenteditable="true"]:focus{outline:1px solid var(--blue2);background:rgba(45,106,159,0.05);}
+
+  /* ===================== PROGRESS BAR ===================== */
+  .scroll-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--accent));z-index:999;transition:width 0.1s linear;width:0%;}
+
+  /* ===================== SECTION INDICATOR ===================== */
+  .section-dots{position:fixed;right:2rem;top:50%;transform:translateY(-50%);z-index:150;display:flex;flex-direction:column;gap:0.75rem;}
+  .sdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.3s;border:1px solid rgba(45,106,159,0.3);}
+  .sdot.active{background:var(--accent);transform:scale(1.5);}
+  .sdot:hover{background:var(--blue2);}
+
+  @media(max-width:700px){
+    nav{padding:0.9rem 1.2rem;} .nav-links{display:none;}
+    .about-grid,.collab-grid{grid-template-columns:1fr;}
+    .hero-stats{flex-direction:column;border:none;} .hstat{border-right:none;border-bottom:1px solid var(--border);}
+    .content-grid{grid-template-columns:1fr;} .reach-grid{grid-template-columns:1fr 1fr;}
+    .section-dots{display:none;}
+    .scroll-panel{height:auto;position:relative;padding:6rem 0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- TICKER -->
+<div class="ticker-wrap" id="tickerTop">
+  <div class="ticker">
+    <span><span class="sym">KOG</span><span class="up">+63,88%</span></span>
+    <span><span class="sym">FRO</span><span class="up">+114,44%</span></span>
+    <span><span class="sym">WALWIL</span><span class="up">+65,73%</span></span>
+    <span><span class="sym">KITRON</span><span class="up">+54,09%</span></span>
+    <span><span class="sym">MPCC</span><span class="up">+52,86%</span></span>
+    <span><span class="sym">VAR</span><span class="up">+52,75%</span></span>
+    <span><span class="sym">DOF</span><span class="up">+47,00%</span></span>
+    <span><span class="sym">KCC</span><span class="up">+29,62%</span></span>
+    <span><span class="sym">STB</span><span class="up">+25,50%</span></span>
+    <span><span class="sym">HEIMU</span><span class="up">+32,60%</span></span>
+    <span><span class="sym">LINK</span><span class="dn">−21,22%</span></span>
+    <span><span class="sym">PRO</span><span class="dn">−1,26%</span></span>
+    <span><span class="sym">NGLOB</span><span class="dn">−3,24%</span></span>
+    <span><span class="sym">DNBD</span><span class="dn">−4,61%</span></span>
+    <span><span class="sym">KOG</span><span class="up">+63,88%</span></span>
+    <span><span class="sym">FRO</span><span class="up">+114,44%</span></span>
+    <span><span class="sym">WALWIL</span><span class="up">+65,73%</span></span>
+    <span><span class="sym">KITRON</span><span class="up">+54,09%</span></span>
+    <span><span class="sym">MPCC</span><span class="up">+52,86%</span></span>
+    <span><span class="sym">VAR</span><span class="up">+52,75%</span></span>
+    <span><span class="sym">DOF</span><span class="up">+47,00%</span></span>
+    <span><span class="sym">KCC</span><span class="up">+29,62%</span></span>
+    <span><span class="sym">STB</span><span class="up">+25,50%</span></span>
+    <span><span class="sym">HEIMU</span><span class="up">+32,60%</span></span>
+    <span><span class="sym">LINK</span><span class="dn">−21,22%</span></span>
+    <span><span class="sym">PRO</span><span class="dn">−1,26%</span></span>
+    <span><span class="sym">NGLOB</span><span class="dn">−3,24%</span></span>
+    <span><span class="sym">DNBD</span><span class="dn">−4,61%</span></span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-logo">Petter<span>printer05</span></div>
+  <ul class="nav-links">
+    <li><a href="#om">Om</a></li>
+    <li><a href="#portefolje">Portefølje</a></li>
+    <li><a href="#innhold">Innhold</a></li>
+    <li><a href="#rekkevidde">Rekkevidde</a></li>
+    <li><a href="#samarbeid">Samarbeid</a></li>
+  </ul>
+</nav>
+
+<!-- SECTION DOTS -->
+<div class="section-dots" id="sectionDots">
+  <div class="sdot active" data-target="hero-section" title="Hjem"></div>
+  <div class="sdot" data-target="om-section" title="Om meg"></div>
+  <div class="sdot" data-target="portfolio-section" title="Portefølje"></div>
+  <div class="sdot" data-target="content-section" title="Innhold"></div>
+  <div class="sdot" data-target="reach-section" title="Rekkevidde"></div>
+  <div class="sdot" data-target="collab-section" title="Samarbeid"></div>
+</div>
+
+<!-- ============ SCROLL SECTIONS ============ -->
+<div class="scroll-container">
+
+  <!-- HERO -->
+  <div class="section-block" id="hero-section" style="height:130vh;">
+    <div class="scroll-panel" id="hero-panel">
+      <div class="hero-grid-bg"></div>
+      <div class="hero-glow"></div>
+      <canvas id="candleCanvas"></canvas>
+      <div class="panel-inner" style="text-align:center;">
+        <div class="hero-eyebrow" id="e-badge">Investert siden jeg var 15</div>
+        <h1 id="e-h1">Norsk finans<br>for <em id="e-h1em">din generasjon</em></h1>
+        <p class="hero-sub" id="e-sub">Jeg er 21 år, studerer økonomi på BI og har investert siden ungdomsskolen. Her deler jeg det jeg faktisk gjør med pengene mine — aksjer, fond og makro, på norsk.</p>
+        <div class="hero-btns">
+          <a href="https://www.tiktok.com/@petterprinter05" target="_blank" class="btn-primary">Følg på TikTok</a>
+          <a href="#samarbeid" class="btn-ghost">Samarbeid</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat"><div class="val" id="e-s1v">6 år</div><div class="lbl" id="e-s1l">Erfaring som investor</div></div>
+          <div class="hstat"><div class="val" id="e-s2v">~70%</div><div class="lbl" id="e-s2l">Norsk publikum</div></div>
+          <div class="hstat"><div class="val" id="e-s3v">18–35</div><div class="lbl" id="e-s3l">Kjernemålgruppe</div></div>
+          <div class="hstat"><div class="val" id="e-s4v">+17%</div><div class="lbl" id="e-s4l">CAGR siden start</div></div>
+          <div class="hstat"><div class="val" id="e-s5v">BI</div><div class="lbl" id="e-s5l">Siviløkonom-student</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OM MEG -->
+  <div class="section-block" id="om-section" style="height:100vh;">
+    <div class="scroll-panel" id="om-panel">
+      <div class="panel-inner">
+        <div class="about-grid">
+          <div class="about-body">
+            <div class="sec-label">Om meg</div>
+            <h2 id="e-om-h2">Jeg begynte da ingen andre gadd</h2>
+            <div class="rule"></div>
+            <p id="e-om-p1">Jeg kjøpte min første aksje som <b>15-åring</b>. Ikke fordi jeg var spesielt flink, men fordi jeg ble nysgjerrig og bare begynte. Siden da har jeg gjort feil, lært masse, og bygget en portefølje jeg faktisk er stolt av.</p>
+            <p id="e-om-p2">Nå er jeg 21, studerer <b>siviløkonomi på BI</b>, og bruker TikTok til å dele det jeg lærer — uten filter og uten å late som om jeg har alle svarene.</p>
+            <p id="e-om-p3">Jeg snakker om <b>norske aksjer, indeksfond, makro og personlig økonomi</b>. Alt på norsk. Alt basert på det jeg faktisk gjør med mine egne penger.</p>
+          </div>
+          <div class="about-cards">
+            <div class="acard"><div class="acard-icon">📈</div><div><div class="acard-title" id="e-ac1t">6 år i markedet</div><div class="acard-desc" id="e-ac1d">Startet som 15-åring. Har opplevd både oppganger, krakk og alt i mellom</div></div></div>
+            <div class="acard"><div class="acard-icon">🎓</div><div><div class="acard-title" id="e-ac2t">Studerer økonomi på BI</div><div class="acard-desc" id="e-ac2d">Teori møter praksis — jeg bruker det jeg lærer på skolen direkte i porteføljen</div></div></div>
+            <div class="acard"><div class="acard-icon">🇳🇴</div><div><div class="acard-title" id="e-ac3t">På norsk, for nordmenn</div><div class="acard-desc" id="e-ac3d">Det finnes nesten ingen som lager seriøst finansinnhold på norsk for TikTok. Det er min plass</div></div></div>
+            <div class="acard"><div class="acard-icon">🎥</div><div><div class="acard-title" id="e-ac4t">Kort og ærlig</div><div class="acard-desc" id="e-ac4d">30–60 sekunder. Ingen fluff. Bare det som faktisk er verdt å vite</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO -->
+  <div class="section-block" id="portfolio-section" style="height:100vh;">
+    <div class="scroll-panel" id="portfolio-panel">
+      <div class="panel-inner">
+        <div class="sec-label">Portefølje</div>
+        <h2 id="e-port-h2">Mine investeringer</h2>
+        <div class="rule" style="margin-bottom:1rem;"></div>
+        <div class="port-scroll">
+          <table class="port-table">
+            <thead><tr><th>Ticker</th><th>Navn</th><th style="text-align:right">Avkastning</th></tr></thead>
+            <tbody>
+              <tr><td colspan="3" class="port-section-head">Enkeltaksjer</td></tr>
+              <tr data-stock="KOG"><td class="port-ticker">KOG</td><td class="port-name">Kongsberg Gruppen</td><td class="port-ret up">+63,88%</td></tr>
+              <tr data-stock="FRO"><td class="port-ticker">FRO</td><td class="port-name">Frontline</td><td class="port-ret up">+114,44%</td></tr>
+              <tr data-stock="WALWIL"><td class="port-ticker">WALWIL</td><td class="port-name">Wallenius Wilhelmsen</td><td class="port-ret up">+65,73%</td></tr>
+              <tr data-stock="KITRON"><td class="port-ticker">KITRON</td><td class="port-name">Kitron</td><td class="port-ret up">+54,09%</td></tr>
+              <tr data-stock="MPCC"><td class="port-ticker">MPCC</td><td class="port-name">MPC Container Ships</td><td class="port-ret up">+52,86%</td></tr>
+              <tr data-stock="VAR"><td class="port-ticker">VAR</td><td class="port-name">Vår Energi</td><td class="port-ret up">+52,75%</td></tr>
+              <tr data-stock="DOF"><td class="port-ticker">DOF</td><td class="port-name">DOF Group</td><td class="port-ret up">+47,00%</td></tr>
+              <tr data-stock="KCC"><td class="port-ticker">KCC</td><td class="port-name">Klaveness Combination Carriers</td><td class="port-ret up">+29,62%</td></tr>
+              <tr data-stock="STB"><td class="port-ticker">STB</td><td class="port-name">Storebrand</td><td class="port-ret up">+25,50%</td></tr>
+              <tr data-stock="MING"><td class="port-ticker">MING</td><td class="port-name">SpareBank 1 SMN</td><td class="port-ret up">+20,01%</td></tr>
+              <tr data-stock="PARS"><td class="port-ticker">PARS</td><td class="port-name">Paratus Energy Services</td><td class="port-ret up">+18,76%</td></tr>
+              <tr data-stock="ORK"><td class="port-ticker">ORK</td><td class="port-name">Orkla</td><td class="port-ret up">+23,50%</td></tr>
+              <tr data-stock="DNB"><td class="port-ticker">DNB</td><td class="port-name">DNB Bank</td><td class="port-ret up">+16,59%</td></tr>
+              <tr data-stock="SATS"><td class="port-ticker">SATS</td><td class="port-name">SATS</td><td class="port-ret up">+13,64%</td></tr>
+              <tr data-stock="LINK"><td class="port-ticker">LINK</td><td class="port-name">Link Mobility Group</td><td class="port-ret dn">−21,22%</td></tr>
+              <tr data-stock="PRO"><td class="port-ticker">PRO</td><td class="port-name">Protector Forsikring</td><td class="port-ret dn">−1,26%</td></tr>
+              <tr><td colspan="3" class="port-section-head">Fond</td></tr>
+              <tr><td class="port-ticker">NTEK</td><td class="port-name">Nordnet Teknologi Indeks</td><td class="port-ret up">+8,38%</td></tr>
+              <tr><td class="port-ticker">KLPG</td><td class="port-name">KLP AksjeGlobal Indeks N</td><td class="port-ret up">+5,26%</td></tr>
+              <tr><td class="port-ticker">DNBT</td><td class="port-name">DNB Teknologi A</td><td class="port-ret up">+1,04%</td></tr>
+              <tr><td class="port-ticker">NUSA</td><td class="port-name">Nordnet USA Indeks</td><td class="port-ret up">+4,56%</td></tr>
+              <tr><td class="port-ticker">HEIMU</td><td class="port-name">Heimdal Utbytte N</td><td class="port-ret up">+32,60%</td></tr>
+              <tr><td class="port-ticker">HEIM</td><td class="port-name">Heimdal Høyrente N</td><td class="port-ret up">+16,56%</td></tr>
+              <tr><td class="port-ticker">KLPE</td><td class="port-name">KLP AksjeEuropa Indeks N</td><td class="port-ret up">+2,13%</td></tr>
+              <tr><td class="port-ticker">KLPU</td><td class="port-name">KLP AksjeUSA Indeks N</td><td class="port-ret up">+0,14%</td></tr>
+              <tr><td class="port-ticker">NGLOB</td><td class="port-name">Nordnet Global Indeks</td><td class="port-ret dn">−3,24%</td></tr>
+              <tr><td class="port-ticker">DNBD</td><td class="port-name">DNB Fund Disruptive Opp</td><td class="port-ret dn">−4,61%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="port-disclaimer" style="margin-top:0.75rem;">⚠️ Dette er ikke finansielle råd. Innholdet reflekterer utelukkende mine egne investeringer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- INNHOLD -->
+  <div class="section-block" id="content-section" style="height:100vh;">
+    <div class="scroll-panel" id="content-panel">
+      <div class="panel-inner">
+        <div class="sec-label">Innhold</div>
+        <h2>Hva jeg lager</h2>
+        <div class="rule"></div>
+        <div class="content-grid">
+          <div class="ccard"><span class="ccard-emoji">📊</span><div class="ccard-tag">Porteføljeoppdatering</div><div class="ccard-title">Hva jeg har kjøpt — og hvorfor</div><div class="ccard-desc">Jeg viser frem porteføljen min åpent. Hva som har gått bra, hva som ikke har det, og hva jeg tenker fremover.</div></div>
+          <div class="ccard"><span class="ccard-emoji">🌍</span><div class="ccard-tag">Makro</div><div class="ccard-title">Verden påvirker lommeboken din</div><div class="ccard-desc">Krig, renter, Trump-tweets — jeg forklarer hvordan globale hendelser faktisk slår ut i norske aksjer.</div></div>
+          <div class="ccard"><span class="ccard-emoji">💼</span><div class="ccard-tag">Fond</div><div class="ccard-title">Indeksfond er undervurdert</div><div class="ccard-desc">De fleste gjør det vanskeligere enn det er. Jeg viser deg hvordan fond fungerer og hvilke jeg eier selv.</div></div>
+          <div class="ccard"><span class="ccard-emoji">📉</span><div class="ccard-tag">Aksjeanalyse</div><div class="ccard-title">Norske aksjer jeg følger</div><div class="ccard-desc">Ikke bare tall — jeg forklarer hva selskapet gjør, hvorfor jeg tror på det, og hva som kan gå galt.</div></div>
+          <div class="ccard"><span class="ccard-emoji">💰</span><div class="ccard-tag">Personlig økonomi</div><div class="ccard-title">Kom i gang, uansett hvor lite du har</div><div class="ccard-desc">Jeg startet med lite. Poenget er å starte. Praktiske råd for unge nordmenn som vil begynne å spare.</div></div>
+          <div class="ccard"><span class="ccard-emoji">🎙️</span><div class="ccard-tag">Format</div><div class="ccard-title">Ingen lange forelesninger</div><div class="ccard-desc">Alt er 30–60 sekunder. Rett på sak. Du trenger ikke sette av en time — bare scroll forbi.</div></div>
+        </div>
+        <div class="tiktok-cta">
+          <p>Se alt innhold på TikTok</p>
+          <a href="https://www.tiktok.com/@petterprinter05" target="_blank" class="btn-primary">@petterprinter05 →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REKKEVIDDE -->
+  <div class="section-block" id="reach-section" style="height:100vh;">
+    <div class="scroll-panel" id="reach-panel">
+      <div class="panel-inner">
+        <div class="sec-label">Tall & Rekkevidde</div>
+        <h2>Publikum & plattform</h2>
+        <div class="rule"></div>
+        <div class="reach-grid">
+          <div class="rcard"><div class="rnum">~70%</div><div class="rlbl">Menn i publikumet</div></div>
+          <div class="rcard"><div class="rnum">18–35</div><div class="rlbl">Kjernemålgruppe</div></div>
+          <div class="rcard"><div class="rnum">~70%</div><div class="rlbl">Norsk publikum</div></div>
+          <div class="rcard"><div class="rnum">TikTok</div><div class="rlbl">+ Instagram Reels</div></div>
+        </div>
+        <div class="partners-label">Relevante samarbeidspartnere</div>
+        <div class="partner-list">
+          <div class="pchip">Nordnet</div>
+          <div class="pchip">Kron</div>
+          <div class="pchip">Investtech</div>
+          <div class="pchip">Storebrand</div>
+          <div class="pchip">Fond & fintech</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAMARBEID -->
+  <div class="section-block" id="collab-section" style="height:100vh;">
+    <div class="scroll-panel" id="collab-panel">
+      <div class="panel-inner">
+        <div class="collab-grid">
+          <div class="collab-body">
+            <div class="sec-label">Samarbeid</div>
+            <h2>La oss jobbe sammen</h2>
+            <div class="rule"></div>
+            <p>Jeg er ikke et mediebyrå. Jeg er en 21-åring som faktisk investerer og snakker åpent om det — noe som er ganske uvanlig på norsk TikTok. Det betyr at folk som ser innholdet mitt faktisk bryr seg om finans, og aktivt leter etter produkter og tjenester som kan hjelpe dem.</p>
+            <ul class="collab-list">
+              <li><b>Sponsede videoer</b> — naturlig integrert, ikke påklistret reklame</li>
+              <li><b>Affiliateavtaler</b> — lenker og koder jeg faktisk tror på</li>
+              <li><b>Produktomtaler</b> — ærlige, ikke kjøpte</li>
+              <li><b>Langsiktige partnerskap</b> — jeg foretrekker dette fremfor enkeltvideoer</li>
+            </ul>
+            <p style="font-size:0.82rem;color:var(--slate);">Alle samarbeid merkes tydelig. Jeg reklamerer ikke for noe jeg ikke selv ville brukt.</p>
+          </div>
+          <div class="cform">
+            <div class="fgroup"><label>Navn / Selskap</label><input type="text" placeholder="Ditt navn eller selskap"></div>
+            <div class="fgroup"><label>E-post</label><input type="email" placeholder="din@epost.no"></div>
+            <div class="fgroup"><label>Type samarbeid</label>
+              <select><option value="">Velg type...</option><option>Sponset video</option><option>Affiliateavtale</option><option>Produktomtale</option><option>Langsiktig partnerskap</option><option>Annet</option></select>
+            </div>
+            <div class="fgroup"><label>Melding</label><textarea placeholder="Fortell kort om samarbeidet du ønsker..."></textarea></div>
+            <button class="btn-send" onclick="alert('Takk! Jeg tar kontakt innen 48 timer.')">Send forespørsel</button>
+            <p class="form-note">Eller direkte: <b>kirkengpetter@gmail.com</b></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end scroll-container -->
+
+<footer>
+  <div class="footer-logo">Petterprinter05</div>
+  <div class="footer-handle">@petterprinter05 · TikTok & Instagram</div>
+  <div class="footer-links">
+    <a href="https://www.tiktok.com/@petterprinter05" target="_blank">TikTok</a>
+    <a href="#om-section">Om meg</a>
+    <a href="#portfolio-section">Portefølje</a>
+    <a href="#collab-section">Samarbeid</a>
+  </div>
+  <p class="footer-disc">⚠️ Ingenting på denne siden er finansielle råd. Jeg viser hva jeg gjør med mine egne penger — du må alltid gjøre din egen vurdering før du investerer.</p>
+  <p class="footer-copy">© 2026 Petterprinter05. Alle rettigheter forbeholdt.</p>
+</footer>
+
+<!-- STOCK MODAL -->
+<div class="modal-overlay" id="stockModal" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div>
+        <div class="modal-ticker" id="m-ticker"></div>
+        <div class="modal-name" id="m-name"></div>
+        <div class="modal-meta" id="m-meta"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-kpi" id="m-kpi"></div>
+    <div class="modal-body">
+      <div class="modal-tese" id="m-tese"></div>
+      <div class="modal-section">
+        <div class="modal-section-title">Veksttriggere</div>
+        <ul class="modal-list triggers" id="m-triggers"></ul>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Utfordringer</div>
+        <ul class="modal-list challenges" id="m-challenges"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT BAR -->
+<div class="edit-bar">
+  <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">✏ Rediger side</button>
+  <span id="editStatus">Klikk for å redigere tekst direkte på siden</span>
+  <button class="save-btn" id="saveBtn" onclick="saveEdits()" style="display:none">Lagre</button>
+  <span class="edit-hint" id="editHint"></span>
+</div>
+
+<script>
+/* ============================================================
+   CINEMATIC SCROLL ENGINE
+   Each section panel uses position:sticky so it stays visible
+   while the user scrolls through its "height" window.
+   We track scroll progress per panel and drive:
+   - outgoing panel: scale down + fade out upward
+   - incoming panel: scale up + fade in from below
+   ============================================================ */
+const panels = Array.from(document.querySelectorAll('.section-block'));
+const panelEls = panels.map(p => p.querySelector('.scroll-panel'));
+const dots = Array.from(document.querySelectorAll('.sdot'));
+const progressBar = document.getElementById('scrollProgress');
+const nav = document.getElementById('mainNav');
+let currentPanel = 0;
+let ticking = false;
+
+function lerp(a,b,t){return a+(b-a)*t;}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function easeOut(t){return 1-Math.pow(1-t,3);}
+function easeIn(t){return t*t*t;}
+
+function updateScroll(){
+  const scrollY = window.scrollY;
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (scrollY/docH*100)+'%';
+
+  // Hide ticker when scrolled
+  nav.classList.toggle('scrolled', scrollY > 40);
+
+  panels.forEach((block, i) => {
+    const panel = panelEls[i];
+    const blockTop = block.offsetTop;
+    const blockH = block.offsetHeight;
+    // progress within this block: 0 = entering, 1 = leaving
+    const raw = (scrollY - blockTop) / blockH;
+    const progress = clamp(raw, 0, 1);
+
+    // Hero panel: only animate out, never hide on entry
+    if(i === 0){
+      if(raw <= 0){
+        // at top — fully visible, no transform
+        panel.style.transform = '';
+        panel.style.opacity = '1';
+        panel.style.filter = '';
+        return;
+      }
+      // scroll out: scale + fade upward in second half of its 200vh block
+      const outP = clamp((raw - 0.5) * 2, 0, 1);
+      const ty = -easeIn(outP) * 80;
+      const sc = lerp(1, 0.92, easeIn(outP));
+      const op = lerp(1, 0, easeIn(outP));
+      const bl = easeIn(outP) * 6;
+      panel.style.transform = `translateY(${ty}px) scale(${sc})`;
+      panel.style.opacity = op;
+      panel.style.filter = bl > 0.1 ? `blur(${bl}px)` : '';
+      return;
+    }
+
+    // Outgoing: as we scroll past bottom half, push panel up + fade
+    let ty = 0, scale = 1, opacity = 1, blur = 0;
+
+    if(raw < 0){
+      // first panel: always fully visible at top
+      if(i === 0){
+        ty = 0; scale = 1; opacity = 1;
+      } else {
+        ty = clamp(-raw, 0, 1) * 60;
+        opacity = clamp(1+raw*3, 0, 1);
+        scale = lerp(0.94, 1, clamp(1+raw*3, 0, 1));
+      }
+    } else if(raw > 0 && raw < 1){
+      // panel is active, push outgoing up as next panel arrives
+      const outP = clamp((raw-0.5)*2, 0, 1);
+      ty = -easeIn(outP) * 80;
+      scale = lerp(1, 0.92, easeIn(outP));
+      opacity = lerp(1, 0, easeIn(outP));
+      blur = easeIn(outP) * 6;
+    } else {
+      // fully scrolled past
+      opacity = 0;
+      ty = -80;
+      scale = 0.92;
+    }
+
+    panel.style.transform = `translateY(${ty}px) scale(${scale})`;
+    panel.style.opacity = opacity;
+    panel.style.filter = blur > 0.1 ? `blur(${blur}px)` : '';
+
+    // Active dot tracking
+    if(raw >= 0 && raw < 1) currentPanel = i;
+  });
+
+  dots.forEach((d,i)=>{d.classList.toggle('active', i===currentPanel);});
+  ticking = false;
+}
+
+window.addEventListener('scroll', ()=>{
+  if(!ticking){requestAnimationFrame(updateScroll); ticking=true;}
+}, {passive:true});
+updateScroll();
+
+// Dot click navigation
+dots.forEach((d,i)=>{
+  d.addEventListener('click',()=>{
+    const target = document.getElementById(d.dataset.target);
+    if(target) window.scrollTo({top:target.offsetTop, behavior:'smooth'});
+  });
+});
+
+/* ============================================================
+   CANDLESTICK BACKGROUND
+   ============================================================ */
+(function(){
+  const canvas=document.getElementById('candleCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W,H,candles=[],frame=0;
+  const UP='rgba(45,106,159,0.65)',DN='rgba(180,70,70,0.5)',UPw='rgba(45,106,159,0.35)',DNw='rgba(180,70,70,0.3)';
+  function resize(){W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
+  function gen(){
+    candles=[];
+    const cw=18,gap=10,count=Math.floor(W/(cw+gap))+4;
+    let price=200;
+    for(let i=0;i<count;i++){
+      const chg=(Math.random()-0.46)*12;
+      const o=price,c=price+chg;
+      candles.push({o,c,hi:Math.max(o,c)+(Math.random()*6),lo:Math.min(o,c)-(Math.random()*6),x:-cw*2+i*(cw+gap),w:cw});
+      price=c;
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const minP=Math.min(...candles.map(c=>c.lo))-20;
+    const maxP=Math.max(...candles.map(c=>c.hi))+20;
+    const yBot=H*0.85,yTop=H*0.12,scale=(yBot-yTop)/(maxP-minP);
+    const py=p=>yBot-(p-minP)*scale;
+    candles.forEach(cd=>{
+      const bull=cd.c>=cd.o,x=cd.x+frame*0.4;
+      if(x<-cd.w-2||x>W+2)return;
+      ctx.strokeStyle=bull?UPw:DNw;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x+cd.w/2,py(cd.hi));ctx.lineTo(x+cd.w/2,py(cd.lo));ctx.stroke();
+      ctx.fillStyle=bull?UP:DN;
+      ctx.fillRect(x,py(Math.max(cd.o,cd.c)),cd.w,Math.max(1,Math.abs(py(cd.o)-py(cd.c))));
+    });
+    ctx.beginPath();ctx.strokeStyle='rgba(45,106,159,0.15)';ctx.lineWidth=1.5;
+    let first=true;
+    candles.filter(cd=>cd.x+frame*0.4>-10&&cd.x+frame*0.4<W+10).forEach((cd,i,arr)=>{
+      if(i<4)return;
+      const avg=arr.slice(i-4,i+1).reduce((a,b)=>a+(b.o+b.c)/2,0)/5;
+      const x=cd.x+frame*0.4+cd.w/2;
+      if(first){ctx.moveTo(x,py(avg));first=false;}else ctx.lineTo(x,py(avg));
+    });
+    ctx.stroke();
+    frame++;
+    if(frame*0.4>candles[0].w+10)frame=0;
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',()=>{resize();gen();});
+  resize();gen();draw();
+})();
+
+/* ============================================================
+   MAGNETIC CARD TILT
+   ============================================================ */
+document.querySelectorAll('.hstat,.rcard,.ccard,.acard').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left-r.width/2)/(r.width/2);
+    const y=(e.clientY-r.top-r.height/2)/(r.height/2);
+    card.style.transform=`perspective(600px) rotateY(${x*6}deg) rotateX(${-y*6}deg) translateZ(8px)`;
+    card.style.boxShadow=`${-x*8}px ${-y*8}px 24px rgba(45,106,159,0.2)`;
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='';card.style.boxShadow='';
+    card.style.transition='transform 0.5s ease,box-shadow 0.5s ease';
+  });
+  card.addEventListener('mouseenter',()=>{card.style.transition='transform 0.1s ease,box-shadow 0.1s ease';});
+});
+
+/* ============================================================
+   COUNTER ANIMATION
+   ============================================================ */
+function animateCounters(){
+  document.querySelectorAll('.hstat .val').forEach(el=>{
+    const txt=el.textContent.trim();
+    const num=parseFloat(txt.replace(',','.').replace('%','').replace('+',''));
+    if(isNaN(num)||txt==='BI'||txt.includes('–'))return;
+    const isPlus=txt.startsWith('+'),isPct=txt.includes('%');
+    const decimals=txt.includes(',')?(txt.split(',')[1]||'').replace('%','').replace('+','').length:0;
+    let start=null;
+    function step(ts){
+      if(!start)start=ts;
+      const p=Math.min((ts-start)/1400,1);
+      const ease=1-Math.pow(1-p,3);
+      el.textContent=(isPlus?'+':('' ))+(num*ease).toFixed(decimals).replace('.',',')+(isPct?'%':'');
+      if(p<1)requestAnimationFrame(step); else el.textContent=txt;
+    }
+    requestAnimationFrame(step);
+  });
+}
+const obs=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){animateCounters();obs.disconnect();}});},{threshold:0.3});
+const se=document.querySelector('.hero-stats');
+if(se)obs.observe(se);
+
+/* ============================================================
+   STOCK MODAL
+   ============================================================ */
+const STOCKS={
+  KOG:{name:'Kongsberg Gruppen ASA',ticker:'KOG',sektor:'Forsvar / Industri / Teknologi',avkastning:'+63,88%',gav:'258,42 NOK',vekting:'5,38%',tese:'NATO-forsvarssupersyklus og strukturell opprigging via Kongsberg Maritime-fisjon.',kpi:[{l:'P/E',v:'38'},{l:'ROE',v:'~24%'},{l:'Utbytte',v:'~0,8%'}],triggers:['Geopolitisk usikkerhet og økte NATO-forsvarsbudsjetter driver etterspørselen','Fisjon av Kongsberg Maritime åpner for mer rendyrket verdsettelse','Ordrebok på over NOK 157 milliarder — den høyeste noensinne','Forventet salgshopp på NOK 40 milliarder over to år'],challenges:['Høy verdsettelse (P/E 38) gir liten sikkerhetsmargin','Noen analytikere har nedgradert fra kjøp til hold','Fisjon medfører kortsiktig strukturell usikkerhet','Geopolitiske svingninger kan lede til nedskalering av forsvarsbudsjetter']},
+  FRO:{name:'Frontline PLC',ticker:'FRO',sektor:'Shipping / Tankshipping',avkastning:'+114,44%',gav:'160,51 NOK',vekting:'0,04%',tese:'Global tankleder med sterk kontantstrøm og attraktivt utbytte.',kpi:[{l:'Sektor',v:'Tank'},{l:'Avkastning',v:'+114,44%'},{l:'GAV',v:'160,51'}],triggers:['Sterk global oljeetterspørsel holder tankrater oppe','Geopolitiske forstyrrelser øker skuteavstand og gir høyere rater','Stor og moderne flåte gir kostnadsfortrinn','Generøs utbyttepolitikk tiltrekker investorer'],challenges:['Syklisk sektor — tanknedgang kan komme raskt','OPEC+-produksjonsbeslutninger påvirker volumer direkte','Regulatorisk press på utslipp fra skipsfarten','Oljeprisfall kan redusere etterspørselen']},
+  WALWIL:{name:'Wallenius Wilhelmsen ASA',ticker:'WALWIL',sektor:'Shipping / Kjøretøylogistikk',avkastning:'+65,73%',gav:'78,62 NOK',vekting:'2,66%',tese:'Global RoRo-leder med raterobusthet og forbedrede EBITDA-utsikter.',kpi:[{l:'P/E',v:'6,8'},{l:'ROE',v:'~24%'},{l:'Utbytte',v:'~8%'}],triggers:['Forbedrede EBITDA-utsikter for 2026 med raterobusthet','Normalisering av myndighetssegmentet kan øke bileksportvolumene','Synlig rateforbedring etter Q4 2025','Digitalisering forbedrer kostnadseffektiviteten'],challenges:['Trumps toll- og handelstiltak kan bremse global bilhandel','Ny tonnasje fra nybygg kan presse ratene','Geopolitiske spenninger påvirker ruter og volumer','Sårbar for svak bilindustri globalt']},
+  KITRON:{name:'Kitron ASA',ticker:'KIT',sektor:'Industri / EMS / Forsvarselektronikk',avkastning:'+54,09%',gav:'66,91 NOK',vekting:'3,89%',tese:'NATO-drevet forsvarsetterspørsel og rekordhøy ordrereserve.',kpi:[{l:'P/E',v:'21'},{l:'ROE',v:'~22%'},{l:'Utbytte',v:'~1,9%'}],triggers:['Forsvarssupersyklusen i Europa driver ekstraordinær etterspørsel','Ordrereserve EUR 709,3 millioner — opp 50% fra året før','Ny ordre EUR 42 millioner fra forsvar/romfart april 2026','Langsiktig inntektsmål: EUR 1,5 milliarder'],challenges:['Avhengig av forsvarsinvesteringstakten','Kapasitetsutfordringer ved sterk vekst kan presse marginer','Valutarisiko: inntekter i EUR, aksje i NOK','Høy P/E krever at veksten opprettholdes']},
+  MPCC:{name:'MPC Container Ships ASA',ticker:'MPCC',sektor:'Shipping / Containerfrakt',avkastning:'+52,86%',gav:'15,64 NOK',vekting:'1,34%',tese:'Attraktivt priset containerreder med høy utbyttekapasitet.',kpi:[{l:'Sektor',v:'Container'},{l:'Avkastning',v:'+52,86%'},{l:'GAV',v:'15,64'}],triggers:['Containerrater holdt seg godt inn i 2025','Rødehavskrisen har økt skuteavstand og gitt høyere rater','Generøs utbyttepolitikk','Lav flåtealder gir kostnadsfortrinn'],challenges:['Syklisk sektor — rater kan kollapse raskt','Ny tonnasjeleveranse kan presse ratene','Avhengig av global handelsvekst','Geopolitisk normalisering kan sende ratene ned']},
+  VAR:{name:'Vår Energi ASA',ticker:'VAR',sektor:'Energi / Olje & gass',avkastning:'+52,75%',gav:'30,15 NOK',vekting:'7,76%',tese:'Høy kontantstrøm, generøst utbytte og produksjonsvekst mot 2026-målene.',kpi:[{l:'P/E',v:'8,2'},{l:'ROE',v:'~22%'},{l:'Utbytte',v:'~13%'}],triggers:['Produksjonsmål 390 000–410 000 fat/dag for 2026','Generøs utbyttepolitikk med høy kontantutdeling','Lavt kostnadsnivå — robust under USD 70/fat','~30 utviklingsprosjekter på norsk sokkel'],challenges:['Oljeprisen falt gjennom 2025','Nettoinntekt kun USD 25 millioner i Q4 2025','OPEC+ kan presse prisene ytterligere','Politisk press knyttet til energiomstilling']},
+  DOF:{name:'DOF Group ASA',ticker:'DOFG',sektor:'Offshore / Subsea-tjenester',avkastning:'+47,00%',gav:'94,83 NOK',vekting:'4,69%',tese:'AHTS-markedsopphenting, rekordordrebok og solid utbyttekapasitet.',kpi:[{l:'P/E',v:'5,8'},{l:'ROE',v:'~28%'},{l:'Utbytte',v:'~11%'}],triggers:['EBITDA-guiding 2026: USD 830–880 millioner','AHTS-markedet henter inn til det bredere subseamarkedet','Kunder sikrer kapasitet tidligere enn normalt','Høy global aktivitet i subsea og rigg'],challenges:['Syklisk sektor avhengig av oljepris','Sterk kursoppgang kan begrense kortsiktig oppside','Høy kapitalintensitet gir risiko ved nedgang','Oljeselskaper kan kutte E&P-budsjetter raskt']},
+  KCC:{name:'Klaveness Combination Carriers ASA',ticker:'KCC',sektor:'Shipping / Kombinasjonsskip',avkastning:'+29,62%',gav:'73,14 NOK',vekting:'3,10%',tese:'Unik fleksibilitet mellom tank og tørrbulk samt ny lavkarbonflåte.',kpi:[{l:'P/E',v:'7,5'},{l:'ROE',v:'~19%'},{l:'Utbytte',v:'~9%'}],triggers:['Nye CABU-skip: ~20% lavere karbonfotavtrykk og ~20% høyere inntjening','Fleksibilitet til å skifte mellom råolje, tørrbulk og kjemikalier','Solid Q4 2025: EBITDA USD 22,6 millioner','Sterk finansiell posisjon inn i 2026'],challenges:['Syklisk eksponering mot tank- og tørrbulkmarkedet','Makroøkonomisk avmatning kan redusere fraktratene','Nybygglevering øker flåtekapasiteten','Handelskrig kan redusere global transport']},
+  STB:{name:'Storebrand ASA',ticker:'STB',sektor:'Forsikring / Kapitalforvaltning',avkastning:'+25,50%',gav:'142,55 NOK',vekting:'8,60%',tese:'Eksponering mot langsiktig nordisk sparing, ESG-kapitalforvaltning og aldrende befolkning.',kpi:[{l:'P/E',v:'10,5'},{l:'ROE',v:'~13%'},{l:'Utbytte',v:'~4,8%'}],triggers:['Forvaltet kapital NOK 1 442 milliarder — 13% vekst siste 12 mnd','Gebyrer og administrasjonsinntekter opp 10% i Q1 2025','ESG-profil gir konkurransefortrinn','Demografisk medvind: aldrende befolkning'],challenges:['Combined ratio 97% mot mål på 90–92%','Renterisiko kan påvirke forvaltningsresultater','Aksjen nær konsensuskursmål — begrenset oppside kortsiktig','Reprisingsstrategi tar tid å få effekt']},
+  MING:{name:'SpareBank 1 SMN',ticker:'MING',sektor:'Bank / Finans (regional)',avkastning:'+20,01%',gav:'175,28 NOK',vekting:'5,59%',tese:'Dominerende regional posisjon i Midt-Norge med diversifiserte inntektskilder.',kpi:[{l:'P/E',v:'9,8'},{l:'ROE',v:'~14%'},{l:'Utbytte',v:'~6,0%'}],triggers:['38% markedsandel i Trøndelag og 28% i Romsdal','Krysssalg av regnskaps- og meglertjenester','Digitale investeringer gir effektivisering','Kjøpsanbefaling med kursmål NOK 190–200'],challenges:['Forventet rentekutt ~1% innen desember 2026','Økt konkurranse fra riksdekkende banker og fintechs','Avtagende utlånsetterspørsel i bedriftsmarkedet','Sårbar for lokale konjunktursvingninger']},
+  ORK:{name:'Orkla ASA',ticker:'ORK',sektor:'Konsumvarer / Merkevarer',avkastning:'+23,50%',gav:'99,19 NOK',vekting:'3,60%',tese:'Defensive nordiske merkevarer med stabil kontantstrøm og utbyttekapasitet.',kpi:[{l:'P/E',v:'19,2'},{l:'ROE',v:'~13%'},{l:'Utbytte',v:'~3,3%'}],triggers:['Forbrukerstabile produkter tåler konjunkturnedgang godt','Reprising opprettholder marginer','Omsetning NOK 71,5 milliarder i 2025 — opp 3,3%','Potensielle oppkjøp for å styrke merkevareporteføljen'],challenges:['Begrenset vekstpotensial i modne nordiske markeder','Konkurranse fra private labels i dagligvarekjeder','Råvarekostnader (korn, sukker, kakao) kan presse marginer','Handles primært som verdi- og utbytteaksje']},
+  DNB:{name:'DNB Bank ASA',ticker:'DNB',sektor:'Bank / Finans',avkastning:'+16,59%',gav:'264,52 NOK',vekting:'4,23%',tese:'Norges ledende bank med Carnegie-synergier og sterk kostnadskontroll.',kpi:[{l:'P/E',v:'10,2'},{l:'ROE',v:'~14%'},{l:'Utbytte',v:'~6,5%'}],triggers:['Kapitallette inntekter vokser sterkt','Carnegie-synergieffekter materialiserer seg gjennom 2026','Mål om 14% egenkapitalavkastning','Konsensus: beste verdi i nordisk banksektor'],challenges:['Tap knyttet til nyboligmarkedet økte kraftig i 2026','~1% rentekutt innen desember 2026 presser rentenettoen','Utlånsmarginer under press','ABG: Hold-anbefaling med kursmål NOK 293']},
+  SATS:{name:'SATS ASA',ticker:'SATS',sektor:'Forbrukstjenester / Helse & Velvære',avkastning:'+13,64%',gav:'38,45 NOK',vekting:'3,50%',tese:'Ledende nordisk treningskjede med voksende helsetrend og medlemsvekst.',kpi:[{l:'P/E',v:'24'},{l:'ROE',v:'~14%'},{l:'EBITDA 26',v:'2 359 mnok'}],triggers:['Økt helsebevissthet og etterspørsel etter velvære','Sterk Q4 2025-rapport med positive estimatrevisjoner','Teknisk oppadgående momentum','Ledende merkevare med høy kundetillit i Norden'],challenges:['Høyt rentenivå presser husholdningenes disponible inntekt','Høye leiekostnader for studiolokasjoner','Sesongmessig variasjon i etterspørselen','Konkurranse fra billigkjeder og digitale alternativer']},
+  LINK:{name:'Link Mobility Group Holding ASA',ticker:'LINK',sektor:'IT / CPaaS',avkastning:'−21,22%',gav:'28,51 NOK',vekting:'5,51%',tese:'Europeisk CPaaS-leder posisjonert for RCS-utrulling på iOS.',kpi:[{l:'EV/EBITDA',v:'8,5'},{l:'P/B',v:'1,1'},{l:'Utbytte',v:'0%'}],triggers:['Utrulling av RCS på iOS i 2026 er en transformerende hendelse','Rekordhøy kontraktsgevinst NOK 175 millioner i forventet bruttoprofit','Carnegie: 10% CAGR i organisk bruttoprofit 2024–2026','CPaaS-kontrakter >40% av total kontraktsgevinst'],challenges:['Aksjen ned −21,22% — markedet skeptisk til veksttakten','Redusert forbruk fra enterprise-kunder','Gjeldsnivå krever oppfølging','Utfordringer med å rekruttere teknologipersonell']},
+  PRO:{name:'Protector Forsikring ASA',ticker:'PRO',sektor:'Forsikring (nisje)',avkastning:'−1,26%',gav:'501,32 NOK',vekting:'2,79%',tese:'"The Challenger" — sterk premievekst i Frankrike og disiplinert forsikringsteknikk.',kpi:[{l:'P/E',v:'12,5'},{l:'ROE',v:'~30%'},{l:'Utbytte',v:'~3,5%'}],triggers:['25% vekst i premieinntekter i lokalvaluta per 1. jan 2026','Frankrike: 47% av total vekst — ny vekstmotor','Combined ratio under 90% i fem påfølgende år','Pareto, SEB og Nordea: kjøp, kursmål NOK 580–620'],challenges:['Aksjen nær kjøpsnivå — fundamental vekst ikke priset inn','Ekspansjon til Frankrike øker operasjonell risiko','Rentefall reduserer avkastning på forsikringsreserver','Ny geografisk ekspansjon tar tid å monetisere']},
+  PARS:{name:'Paratus Energy Services',ticker:'PARS',sektor:'Olje & gass / Offshoreservice',avkastning:'+18,76%',gav:'38,73 NOK',vekting:'0,53%',tese:'Nisjeposisjon i offshoreservice med attraktiv verdsettelse.',kpi:[{l:'Sektor',v:'Offshore'},{l:'Avkastning',v:'+18,76%'},{l:'GAV',v:'38,73'}],triggers:['Høy aktivitet i offshoresektoren globalt','Gunstig eksponering mot norsk sokkel','Attraktiv verdsettelse vs. større konkurrenter','Økt E&P-aktivitet driver etterspørsel'],challenges:['Liten markedsverdi gir høyere volatilitet','Avhengig av oljepris og E&P-investeringsnivåer','Begrenset likviditet kan gi store kurssvingninger','Konkurranse fra større aktører med bedre skalafordeler']}
+};
+
+function openStock(key){
+  const s=STOCKS[key];if(!s)return;
+  document.getElementById('m-ticker').textContent=s.ticker;
+  document.getElementById('m-name').textContent=s.name;
+  document.getElementById('m-meta').textContent=s.sektor+' · Vekting '+s.vekting+' · GAV '+s.gav;
+  document.getElementById('m-tese').textContent='Min tese: '+s.tese;
+  const isPos=!s.avkastning.startsWith('−');
+  document.getElementById('m-kpi').innerHTML=s.kpi.map(k=>`<div class="kpi-cell"><div class="kpi-label">${k.l}</div><div class="kpi-val">${k.v}</div></div>`).join('')+`<div class="kpi-cell"><div class="kpi-label">Avkastning</div><div class="kpi-val ${isPos?'pos':'neg'}">${s.avkastning}</div></div>`;
+  document.getElementById('m-triggers').innerHTML=s.triggers.map(t=>`<li>${t}</li>`).join('');
+  document.getElementById('m-challenges').innerHTML=s.challenges.map(c=>`<li>${c}</li>`).join('');
+  document.getElementById('stockModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(e){if(e.target===document.getElementById('stockModal'))closeModalDirect();}
+function closeModalDirect(){document.getElementById('stockModal').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();});
+document.querySelectorAll('tr[data-stock]').forEach(row=>{
+  row.addEventListener('click',()=>openStock(row.dataset.stock));
+});
+
+/* ============================================================
+   EDIT MODE
+   ============================================================ */
+let editMode=false;
+const editIds=['e-badge','e-h1','e-h1em','e-sub','e-s1v','e-s1l','e-s2v','e-s2l','e-s3v','e-s3l','e-s4v','e-s4l','e-s5v','e-s5l','e-om-h2','e-om-p1','e-om-p2','e-om-p3','e-ac1t','e-ac1d','e-ac2t','e-ac2d','e-ac3t','e-ac3d','e-ac4t','e-ac4d','e-port-h2'];
+window.addEventListener('DOMContentLoaded',()=>{editIds.forEach(id=>{const el=document.getElementById(id);if(!el)return;const s=sessionStorage.getItem('e_'+id);if(s)el.innerHTML=s;});});
+function toggleEdit(){
+  editMode=!editMode;const btn=document.getElementById('editToggle');
+  editIds.forEach(id=>{const el=document.getElementById(id);if(el)el.contentEditable=editMode?'true':'false';});
+  if(editMode){btn.textContent='✕ Avslutt';btn.classList.add('active');document.getElementById('editStatus').textContent='Klikk på teksten du vil endre';document.getElementById('saveBtn').style.display='inline-block';document.getElementById('editHint').textContent='Klikk direkte på teksten';}
+  else{btn.textContent='✏ Rediger side';btn.classList.remove('active');document.getElementById('editStatus').textContent='Klikk for å redigere tekst direkte på siden';document.getElementById('saveBtn').style.display='none';document.getElementById('editHint').textContent='';}
+}
+function saveEdits(){editIds.forEach(id=>{const el=document.getElementById(id);if(el)sessionStorage.setItem('e_'+id,el.innerHTML);});const h=document.getElementById('editHint');h.textContent='✓ Lagret';setTimeout(()=>{h.textContent='Klikk direkte på teksten';},2000);}
+</script>
+</body>
+</html>
