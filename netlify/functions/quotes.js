@@ -2,9 +2,9 @@ exports.handler = async function(event, context) {
   const API_KEY = process.env.FINNHUB_API_KEY;
 
   const symbols = [
-    'KOG.OL','FRO.OL','WALWIL.OL','KIT.OL','MPCC.OL',
-    'VAR.OL','DOFG.OL','KCC.OL','STB.OL','MING.OL',
-    'PARS.OL','ORK.OL','DNB.OL','SATS.OL','LINK.OL','PROT.OL'
+    'OSLO:KOG','OSLO:FRO','OSLO:WALWIL','OSLO:KIT','OSLO:MPCC',
+    'OSLO:VAR','OSLO:DOFG','OSLO:KCC','OSLO:STB','OSLO:MING',
+    'OSLO:PARS','OSLO:ORK','OSLO:DNB','OSLO:SATS','OSLO:LINK','OSLO:PROT'
   ];
 
   try {
@@ -18,7 +18,7 @@ exports.handler = async function(event, context) {
 
     const quotes = {};
     results.forEach(({ sym, price, change }) => {
-      if (price) quotes[sym] = {
+      if (price && price > 0) quotes[sym] = {
         price: price.toFixed(2),
         change: change?.toFixed(2) ?? null
       };
